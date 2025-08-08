@@ -1,0 +1,54 @@
+// تعريف الأرجل
+const int pirPin = 2;        // حساس الحركة (رقمي)
+const int buttonPin = 3;     // زر التشغيل (رقمي)
+const int ldrPin = A0;       // حساس الضوء (تماثلي)
+const int tempPin = A1;      // حساس الحرارة TMP36 (تماثلي)
+const int ledPin = 13;       // مؤشر LED (رقمي)
+
+// متغيرات حالة
+bool ledState = false;
+
+void setup() {
+  pinMode(pirPin, INPUT);                 // مدخل حساس الحركة
+  pinMode(buttonPin, INPUT_PULLUP);       // زر التشغيل بمقاومة داخلية
+  pinMode(ledPin, OUTPUT);                // LED كمخرج
+  Serial.begin(9600);                     // تفعيل المراقبة التسلسلية
+}
+
+void loop() {
+  // قراءة الحساسات
+  bool motion = digitalRead(pirPin);               // قراءة PIR
+  bool buttonPressed = digitalRead(buttonPin) == LOW; // الزر مضغوط؟
+  int ldrValue = analogRead(ldrPin);               // قراءة الضوء
+  int rawTemp = analogRead(tempPin);               // قراءة TMP36
+
+  // تحويل حرارة TMP36 إلى درجة مئوية
+  float voltage = rawTemp * (5.0 / 1023.0);         // تحويل ADC إلى فولت
+  float temperatureC = (voltage - 0.5) * 100.0;     // تحويل إلى مئوي
+
+  // طباعة القيم
+  Serial.print("حركة: ");
+  Serial.print(motion);
+  Serial.print(" | زر: ");
+  Serial.print(buttonPressed);
+  Serial.print(" | ضوء: ");
+  Serial.print(ldrValue);
+  Serial.print(" | حرارة: ");
+  Serial.println(temperatureC);
+
+  // منطق التحكم في LED:
+  // شغل الـ LED إذا:
+  // - فيه حركة
+  // - أو الزر مضغوط
+  // - أو الضوء منخفض (القيمة أقل من 300)
+  // - أو الحرارة عالية (أعلى من 30°C)
+  if (motion || buttonPressed || ldrValue < 300 || temperatureC > 30) {
+    digitalWrite(ledPin, HIGH);
+    ledState = true;
+  } else {
+    digitalWrite(ledPin, LOW);
+    ledState = false;
+  }
+
+  delay(500); // نصف ثانية انتظار
+}
